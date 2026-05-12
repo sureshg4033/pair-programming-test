@@ -43,7 +43,7 @@ jobs:
         run: PYTHONPATH=. pytest
 
       - name: Configure AWS credentials
-        if: github.refs == "/refs/head/main"
+        # if: github.refs == "/refs/head/main"
         uses: aws-actions/configure-aws-credentials@v4 # More information on this action can be found below in the 'AWS Credentials' section
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -51,13 +51,13 @@ jobs:
           aws-region: aws-region-1
 
       - name: Login to ECR
-        if: github.refs == "/refs/head/main"
+        # if: github.refs == "/refs/head/main"
         uses: aws-actions/amazon-ecr-login@v2
       
       - name: Build docker image
         uses: docker/build-push-action@v7
         with:
-          push: false
+          push: true
           tags: gists-api:latest
 
       - name: Trivy scan
