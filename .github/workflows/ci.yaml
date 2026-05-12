@@ -41,5 +41,5 @@ jobs:
       #     sarif_file: ${{ steps.ghlint.outputs.sarif-report }}
 
       - name: Run test cases
-        run: PYTHONPATh=. pytest
+        run: PYTHONPATH=. pytest
       
