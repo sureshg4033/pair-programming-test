@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branch:
+      - main
+
+  pull_request:
+    branch:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-scan:
+    name: Test, Build and scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+      
+      - name: setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+      
+      - name: Install dependencies
+        run: pip install --no-cache -r requirements.txt
+
+      # - name: "Run GH-Lint validation."
+      #   id: ghlint
+      #   uses: TWiStErRob/net.twisterrob.ghlint@v0.5.0
+
+      # - name: "Publish 'GH-Lint' GitHub Code Scanning analysis."
+      #   if: ${{ success() || failure() }}
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     checkout_path: ${{ github.workspace }}
+      #     sarif_file: ${{ steps.ghlint.outputs.sarif-report }}
+
+      - name: Run test cases
+        run: PYTHONPATH=. pytest
+
+      - name: Configure AWS credentials
+        # if: github.refs == "/refs/head/main"
+        uses: aws-actions/configure-aws-credentials@v4 # More information on this action can be found below in the 'AWS Credentials' section
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to ECR
+        # if: github.refs == "/refs/head/main"
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Build docker image
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: gists-api:latest
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 851563870286.dkr.ecr.us-east-1.amazonaws.com/gists-api:latest
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
