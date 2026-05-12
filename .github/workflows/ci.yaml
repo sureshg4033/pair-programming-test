@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branch:
+      - main
+      - feature/**
+
+  pull-request:
+    branch:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-scan:
+    name: Test, Build and scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+      
+      - name: setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+      
+      - name: Install dependencies
+        run: pip install --no-cache -r requirements.txt
+
+      # - name: "Run GH-Lint validation."
+      #   id: ghlint
+      #   uses: TWiStErRob/net.twisterrob.ghlint@v0.5.0
+
+      # - name: "Publish 'GH-Lint' GitHub Code Scanning analysis."
+      #   if: ${{ success() || failure() }}
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     checkout_path: ${{ github.workspace }}
+      #     sarif_file: ${{ steps.ghlint.outputs.sarif-report }}
+
+      - name: Run test cases
+        run: PYTHONPATh=. pytest
+      
+      
